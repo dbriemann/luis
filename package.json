@@ -1,0 +1,18 @@
+{
+  "name": "luis",
+  "version": "0.0.1",
+  "description": "Simple image sharing webservice for families.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "David Linus Briemann",
+  "license": "",
+  "dependencies": {
+    "bulma": "^0.9.1",
+    "jquery": "^3.5.1"
+  }
+}
