@@ -22,6 +22,7 @@ func init() {
 }
 
 func InitDB() {
+	revel.AppLog.Warn("InitDB")
 	// dbUser := revel.Config.StringDefault("db.user", "default")
 	// dbPassword := revel.Config.StringDefault("db.password", "")
 	dbName := revel.Config.StringDefault("db.name", "default")

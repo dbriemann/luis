@@ -7,8 +7,9 @@ module:testrunner
 # module:jobs
 
 
-GET     /                                       App.Index
-GET     /login                                  Access.Login
+GET     /                                     App.Index
+GET     /login                                Access.LoginGet
+POST    /login                                Access.LoginPost
 
 # Ignore favicon requests
 GET     /favicon.ico                            Static.Serve("public", "img/favicon.png")

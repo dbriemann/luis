@@ -1,0 +1,67 @@
+{{set . "title" "Login"}}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {{template "header.html" .}}
+</head>
+
+<body>
+  <section class="section">
+    <div class="container is-max-desktop">
+      <div class="columns">
+        <div class="column">
+          <h1 class="title">
+            Login
+          </h1>
+          <form action="/login" method="POST">
+            <div class="field">
+              <label class="label">Email</label>
+              <div class="control has-icons-left has-icons-right">
+                <input name="email" class="input" type="email">
+                <span class="icon is-small is-left">
+                  <i class="fas fa-envelope"></i>
+                </span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="" class="label">Access Key</label>
+              <div class="control has-icons-left has-icons-right">
+                <input name="password" class="input" type="password">
+                <span class="icon is-small is-left">
+                  <i class="fas fa-lock"></i>
+                </span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="checkbox">
+                <input name="remember" type="checkbox">
+                Remember me
+              </label>
+            </div>
+
+            <div class="field is-grouped">
+              <div class="control">
+                <button type="submit" class="button is-link">Login</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="column">
+          <h1 class="title">
+            No access yet?
+          </h1>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  {{template "footer.html" .}}
+</body>
+
+</html>
