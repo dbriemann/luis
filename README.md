@@ -9,7 +9,6 @@ A simple, easy to use, self-hosted, image sharing solution for family or friends
 The following environment variables need to be set for luis:
 
 - `LUIS_ADMIN_EMAIL`: the email(login) of the admin account.
-- `LUIS_ADMIN_KEY`: the access key(password) of the admin account.
 
 # TODO Features
 

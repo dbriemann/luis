@@ -46,8 +46,11 @@ func ensureAdminAccess() {
 		}
 
 		admin.Secret = secret
+		admin.IsAdmin = true
 		needsUpdate = true
 	}
+
+	// TODO: if admin data is not complete show user view and force admin to enter name etc.
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		// Admin user didn't exist in DB. Create.

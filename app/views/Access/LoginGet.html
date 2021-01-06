@@ -10,6 +10,21 @@
 <body>
   <section class="section">
     <div class="container is-max-desktop">
+      {{if .flash.success}}
+      <div class="notification is-primary is-light">
+        <button class="delete"></button>
+        {{.flash.success}}
+      </div>
+      <script src="/public/js/notification-close.js"></script>
+      {{end}}
+      {{if .flash.error}}
+      <div class="notification is-danger is-light">
+        <button class="delete"></button>
+        {{.flash.error}}
+      </div>
+      <script src="/public/js/notification-close.js"></script>
+      {{end}}
+
       <div class="columns">
         <div class="column">
           <h1 class="title">

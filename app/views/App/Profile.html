@@ -1,0 +1,66 @@
+{{set . "title" "Profile"}}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {{template "header.html" .}}
+</head>
+
+<body>
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h1 class="title">
+        Hello {{if .User.Name}}.User.Name{{else}}?{{end}},
+      </h1>
+      <h2 class="subtitle is-4">
+        {{if .UserComplete}}you can edit your profile here.{{else}}please fill out the missing data{{end}}.
+      </h2>
+
+      <form action="/profile" method="POST">
+        <div class="field">
+          <label class="label">Name</label>
+          <div class="control has-icons-left has-icons-right">
+            <input name="name" class="input" type="text" value="{{.User.Name}}">
+            <span class="icon is-small is-left">
+              <i class="fas fa-user"></i>
+            </span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Email</label>
+          <div class="control has-icons-left has-icons-right">
+            <input name="email" class="input" type="email" value="{{.User.Email}}">
+            <span class="icon is-small is-left">
+              <i class="fas fa-envelope"></i>
+            </span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="" class="label">Access Key</label>
+          <div class="control has-icons-left has-icons-right">
+            <input disabled name="password" class="input" type="text" value="{{.User.Secret}}">
+            <span class="icon is-small is-left">
+              <i class="fas fa-lock"></i>
+            </span>
+          </div>
+          <p class="help is-grey-dark">You cannot choose a secret. To generate a new one press X.</p>
+        </div>
+
+        <div class="field is-grouped">
+          <div class="control">
+            <button type="submit" class="button is-link">Save</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    </div>
+  </section>
+
+  {{template "footer.html" .}}
+</body>
+
+</html>
