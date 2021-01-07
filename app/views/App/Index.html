@@ -1,24 +1,16 @@
 {{set . "title" "Home"}}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="has-navbar-fixed-top">
 
 <head>
   {{template "header.html" .}}
 </head>
 
 <body>
+  {{template "navbar.html" .}}
+
   <section class="section">
-    <div>
-      <form action="/logout" method="POST">
-        <div class="field is-grouped">
-          <div class="control">
-            <button type="submit" class="button is-danger">Logout</button>
-          </div>
-        </div>
-      </form>
-      <a href="/profile" class="button">profile</a>
-    </div>
   </section>
 
   {{template "footer.html" .}}

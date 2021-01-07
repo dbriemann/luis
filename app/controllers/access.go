@@ -18,7 +18,7 @@ type Access struct {
 	*revel.Controller
 }
 
-func (c Access) LoginGet() revel.Result {
+func (c Access) Login() revel.Result {
 	return c.Render()
 }
 
@@ -37,7 +37,7 @@ func (c Access) Logout() revel.Result {
 
 	c.Flash.Success("See you next time!")
 
-	return c.Redirect(Access.LoginGet)
+	return c.Redirect(Access.Login)
 }
 
 func (c Access) LoginPost(remember bool) revel.Result {
@@ -57,14 +57,14 @@ func (c Access) LoginPost(remember bool) revel.Result {
 		// However with the generated passwords this should not be a real issue?!
 		c.Flash.Error("Invalid user credentials!")
 
-		return c.Redirect(Access.LoginGet)
+		return c.Redirect(Access.Login)
 	}
 
 	if subtle.ConstantTimeCompare([]byte(user.Secret), []byte(pass)) == 0 {
 		c.Log.Infof("login - invalid password for email %q", email)
 		c.Flash.Error("Invalid user credentials!")
 
-		return c.Redirect(Access.LoginGet)
+		return c.Redirect(Access.Login)
 	}
 
 	var token string

@@ -9,7 +9,8 @@ module:testrunner
 
 GET     /                                   App.Index
 GET     /profile                            App.Profile
-GET     /login                              Access.LoginGet
+POST    /profile                            App.ProfilePost
+GET     /login                              Access.Login
 POST    /login                              Access.LoginPost
 POST    /logout                             Access.Logout
 

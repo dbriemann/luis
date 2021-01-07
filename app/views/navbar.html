@@ -1,0 +1,64 @@
+<nav class="navbar is-light is-fixed-top" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+
+    <a class="navbar-item ml-5" href="/">
+      <span class="icon is-medium">
+        <i class="fas fa-2x fa-home"></i>
+      </span>
+    </a>
+
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbar_menu">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+
+  <div class="navbar-menu" id="navbar_menu">
+    <div class="navbar-start">
+      <a class="navbar-item" href="/">
+        Home
+      </a>
+      <a class="navbar-item" href="/profile">
+        Profile
+      </a>
+    </div>
+
+    <div class="navbar-end">
+      {{if .IsAdmin}}
+      <a class="navbar-item" href="/admin">
+        Admin
+      </a>
+      {{end}}
+      {{if ne .Route "Access.Login"}}
+      <div class="navbar-item">
+        <form action="/logout" method="POST">
+          <div class="field is-grouped">
+            <div class="control">
+              <button type="submit" class="button is-danger">
+                <span class="icon">
+                  <i class="fas fa-sign-out-alt"></i>
+                </span>
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+      {{end}}
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function () {
+
+      // Check for click events on the navbar burger icon
+      $(".navbar-burger").click(function () {
+
+        // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+        $(".navbar-burger").toggleClass("is-active");
+        $(".navbar-menu").toggleClass("is-active");
+      });
+    });
+  </script>
+</nav>

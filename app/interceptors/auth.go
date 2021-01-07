@@ -14,7 +14,7 @@ func CheckAccess(c *revel.Controller) revel.Result {
 		c.Log.Debugf("could not get session token: %q", err.Error())
 		c.Flash.Error(globals.ErrNotLoggedIn.Error())
 
-		return c.Redirect(controllers.Access.LoginGet)
+		return c.Redirect(controllers.Access.Login)
 	}
 
 	strTok, ok := tok.(string)
@@ -33,11 +33,18 @@ func CheckAccess(c *revel.Controller) revel.Result {
 		c.Flash.Error(globals.ErrNotLoggedIn.Error())
 		c.Log.Debugf("did not find token in cache: %s", strTok)
 
-		return c.Redirect(controllers.Access.LoginGet)
+		return c.Redirect(controllers.Access.Login)
 	}
 
 	// Token is valid. Save email in controller.
 	c.Args["email"] = email
+
+	adminEmail, _ := revel.Config.String("admin.email")
+	if email == adminEmail {
+		c.ViewArgs["IsAdmin"] = true
+	} else {
+		c.ViewArgs["IsAdmin"] = false
+	}
 
 	return nil
 }

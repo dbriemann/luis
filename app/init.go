@@ -85,7 +85,8 @@ func init() {
 		revel.InterceptorFilter,       // Run interceptors around the action.
 		revel.CompressFilter,          // Compress the result.
 		revel.BeforeAfterFilter,       // Call the before and after filter functions
-		revel.ActionInvoker,           // Invoke the action.
+		RememberRouteFilter,
+		revel.ActionInvoker, // Invoke the action.
 	}
 
 	// Interceptors
@@ -99,6 +100,12 @@ func init() {
 	// revel.OnAppStart(ExampleStartupScript)
 	// revel.OnAppStart(InitDB)
 	// revel.OnAppStart(FillCache)
+}
+
+var RememberRouteFilter = func(c *revel.Controller, fc []revel.Filter) {
+	revel.AppLog.Debugf("route %s", c.Action)
+	c.ViewArgs["Route"] = c.Action
+	fc[0](c, fc[1:]) // Execute the next filter stage.
 }
 
 // HeaderFilter adds common security headers

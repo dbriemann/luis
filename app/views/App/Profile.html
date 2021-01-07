@@ -1,60 +1,88 @@
 {{set . "title" "Profile"}}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="has-navbar-fixed-top">
 
 <head>
   {{template "header.html" .}}
 </head>
 
 <body>
+  {{template "navbar.html" .}}
+
   <section class="section">
     <div class="container is-max-desktop">
+      {{if .flash.success}}
+      <div class="notification is-primary is-light">
+        <button class="delete"></button>
+        {{.flash.success}}
+      </div>
+      <script src="/public/js/notification-close.js"></script>
+      {{end}}
+      {{if .flash.error}}
+      <div class="notification is-danger is-light">
+        <button class="delete"></button>
+        {{.flash.error}}
+      </div>
+      <script src="/public/js/notification-close.js"></script>
+      {{end}}
+
       <h1 class="title">
-        Hello {{if .User.Name}}.User.Name{{else}}?{{end}},
+        Hello <span class="is-italic">{{if .User.Name}}{{.User.Name}}{{else}}?{{end}}</span>,
       </h1>
       <h2 class="subtitle is-4">
-        {{if .UserComplete}}you can edit your profile here.{{else}}please fill out the missing data{{end}}.
+        you can edit your profile here.
       </h2>
 
-      <form action="/profile" method="POST">
-        <div class="field">
-          <label class="label">Name</label>
-          <div class="control has-icons-left has-icons-right">
-            <input name="name" class="input" type="text" value="{{.User.Name}}">
-            <span class="icon is-small is-left">
-              <i class="fas fa-user"></i>
-            </span>
-          </div>
-        </div>
+      <div class="block">
+        <form action="/profile" method="POST">
+          <div class="columns">
+            <div class="column">
+              <div class="field">
+                <label class="label">Your Name</label>
+                <div class="control has-icons-left has-icons-right">
+                  <input name="name" class="input" type="text" value="{{.User.Name}}">
+                  <span class="icon is-small is-left">
+                    <i class="fas fa-user"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
 
-        <div class="field">
-          <label class="label">Email</label>
-          <div class="control has-icons-left has-icons-right">
-            <input name="email" class="input" type="email" value="{{.User.Email}}">
-            <span class="icon is-small is-left">
-              <i class="fas fa-envelope"></i>
-            </span>
+            <div class="column">
+              <div class="field">
+                <label class="label">Email</label>
+                <div class="control has-icons-left has-icons-right">
+                  <input name="email" class="input" type="email" value="{{.User.Email}}">
+                  <span class="icon is-small is-left">
+                    <i class="fas fa-envelope"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div class="field">
-          <label for="" class="label">Access Key</label>
-          <div class="control has-icons-left has-icons-right">
-            <input disabled name="password" class="input" type="text" value="{{.User.Secret}}">
-            <span class="icon is-small is-left">
-              <i class="fas fa-lock"></i>
-            </span>
+          <div class="field is-grouped">
+            <div class="control">
+              <button type="submit" class="button is-link">Save</button>
+            </div>
           </div>
-          <p class="help is-grey-dark">You cannot choose a secret. To generate a new one press X.</p>
-        </div>
 
-        <div class="field is-grouped">
-          <div class="control">
-            <button type="submit" class="button is-link">Save</button>
-          </div>
+        </form>
+      </div>
+
+      <div class="block">
+        <label class="label">Access Key</label>
+        <div class="control has-icons-left has-icons-right">
+          <input disabled name="password" class="input" type="text" value="{{.User.Secret}}">
+          <span class="icon is-small is-left">
+            <i class="fas fa-lock"></i>
+          </span>
         </div>
-      </form>
+        <p class="help is-grey-dark">You cannot choose a secret but you can request a new one via mail.</p>
+      </div>
+      <button class="is-link button">Request Secret (TODO)</button>
+
     </div>
 
     </div>
