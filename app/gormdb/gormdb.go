@@ -38,4 +38,19 @@ func InitDB() {
 	if err := DB.AutoMigrate(&models.User{}); err != nil {
 		gormLog.Fatalf("migration of %q failed: %s", "User", err.Error())
 	}
+	if err := DB.AutoMigrate(&models.File{}); err != nil {
+		gormLog.Fatalf("migration of %q failed: %s", "File", err.Error())
+	}
+	if err := DB.AutoMigrate(&models.Tag{}); err != nil {
+		gormLog.Fatalf("migration of %q failed: %s", "Tag", err.Error())
+	}
+	if err := DB.AutoMigrate(&models.Collection{}); err != nil {
+		gormLog.Fatalf("migration of %q failed: %s", "Collection", err.Error())
+	}
+	if err := DB.AutoMigrate(&models.Star{}); err != nil {
+		gormLog.Fatalf("migration of %q failed: %s", "Star", err.Error())
+	}
+	if err := DB.AutoMigrate(&models.Comment{}); err != nil {
+		gormLog.Fatalf("migration of %q failed: %s", "Comment", err.Error())
+	}
 }
