@@ -22,10 +22,9 @@ func init() {
 }
 
 func InitDB() {
-	revel.AppLog.Warn("InitDB")
-	// dbUser := revel.Config.StringDefault("db.user", "default")
-	// dbPassword := revel.Config.StringDefault("db.password", "")
-	dbName := revel.Config.StringDefault("db.name", "default")
+	dbName := revel.Config.StringDefault("db.name", "luis.sqlite")
+
+	revel.AppLog.Info("init database %q", dbName)
 
 	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
 	if err != nil {
@@ -41,9 +40,6 @@ func InitDB() {
 	if err := DB.AutoMigrate(&models.File{}); err != nil {
 		gormLog.Fatalf("migration of %q failed: %s", "File", err.Error())
 	}
-	if err := DB.AutoMigrate(&models.Tag{}); err != nil {
-		gormLog.Fatalf("migration of %q failed: %s", "Tag", err.Error())
-	}
 	if err := DB.AutoMigrate(&models.Collection{}); err != nil {
 		gormLog.Fatalf("migration of %q failed: %s", "Collection", err.Error())
 	}
@@ -53,4 +49,7 @@ func InitDB() {
 	if err := DB.AutoMigrate(&models.Comment{}); err != nil {
 		gormLog.Fatalf("migration of %q failed: %s", "Comment", err.Error())
 	}
+	// if err := DB.AutoMigrate(&models.Tag{}); err != nil {
+	// 	gormLog.Fatalf("migration of %q failed: %s", "Tag", err.Error())
+	// }
 }

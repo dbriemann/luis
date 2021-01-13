@@ -3,6 +3,7 @@ package models
 import "gorm.io/gorm"
 
 type FileType int
+type PermissionType int
 
 const (
 	FileTypeUnknown FileType = 0
@@ -10,30 +11,40 @@ const (
 	FileTypeVideo   FileType = 2
 	FileTypePDF     FileType = 3
 	FileTypeTXT     FileType = 4
+
+	PermissionTypeView PermissionType = 0
+	PermissionTypeAdd  PermissionType = 1
 )
 
-type Tag struct {
-	gorm.Model
+// type Tag struct {
+// TODO: think about a simple tag solution that works together
+// with the permission management of collections.
 
-	Key   string
-	Value string
-}
+// gorm.Model
+
+// Key   string
+// Value string
+// }
 
 type Comment struct {
 	gorm.Model
 
 	Text   string
-	FileID uint // Foreign key (File).
+	FileID uint // Belongs to 1 File.
 }
 
 type Star struct {
 	gorm.Model
 
-	FileID uint // Foreign key (File).
+	FileID uint // Belongs to 1 File.
 }
 
 type Permission struct {
-	// TODO: Role?
+	gorm.Model
+
+	Type         PermissionType
+	CollectionID uint // Belongs to 1 Collection.
+	UserID       uint // Belongs to 1 User.
 }
 
 type Collection struct {
@@ -42,8 +53,9 @@ type Collection struct {
 	Name        string
 	Description string
 	Cover       File
-	Files       []File `gorm:"many2many:collection_files;"`
-	OwnerID     uint   // Foreign key (Owner/User).
+	Files       []File       `gorm:"many2many:collection_files;"` // Has 0..n Files.
+	Permissions []Permission // Has 0..n Permissions.
+	OwnerID     uint         // Belongs to 1 User.
 }
 
 type File struct {
@@ -55,12 +67,11 @@ type File struct {
 	Type         FileType
 	Title        string
 	Description  string
-	Comments     []Comment    // Has-many relationship.
-	Stars        []Star       // Has-many relationship.
-	Tags         []Tag        `gorm:"many2many:file_tags;"`
-	Collections  []Collection `gorm:"many2many:collection_files;"`
-	OwnerID      uint         // Foreign key (Owner/User).
-	CollectionID uint         // Foreign key (Collection/Cover)
+	Comments     []Comment    // Has 0..n Comments.
+	Stars        []Star       // Has 0..n Stars.
+	Collections  []Collection `gorm:"many2many:collection_files;"` // Is in to 0..n Collections.
+	OwnerID      uint         // Belongs to 1 User as owner.
+	CollectionID uint         // Belongs to 1 Collection as cover.
 
 	// TODO acess/rights/special tags
 }
@@ -71,7 +82,8 @@ type User struct {
 	Secret      string
 	Name        string
 	IsAdmin     bool
-	Files       []File       `gorm:"foreignKey:OwnerID"`
-	Collections []Collection `gorm:"foreignKey:OwnerID"`
+	Permissions []Permission // Has 0..n Permissions.
+	Files       []File       `gorm:"foreignKey:OwnerID"` // Has 0..n Files.
+	Collections []Collection `gorm:"foreignKey:OwnerID"` // Has 0..n Collections.
 	// TODO: Avatar?
 }

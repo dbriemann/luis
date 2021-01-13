@@ -17,7 +17,6 @@ This document describes the relations of models as plain text. It ignores all ba
 * has 0..n tags(Tag),
 * has 0..n stars(Star),
 * has 0..n comments(Comment),
-* has 0..n permissions(Permission),
 
 ## User
 
@@ -27,11 +26,8 @@ This document describes the relations of models as plain text. It ignores all ba
  
 ## Permission
 
-
-
-## Tag
-
-* is attached to 0..n files(File),
+* belongs to 1 user(User)
+* belongs to 1 collection(Collection)
 
 ## Star
 

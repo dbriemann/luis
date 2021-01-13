@@ -2,11 +2,14 @@ package app
 
 import (
 	"errors"
+	"io/ioutil"
 	"luis/app/controllers"
 	"luis/app/gormdb"
 	"luis/app/interceptors"
 	"luis/app/models"
 	"luis/app/util"
+	"os"
+	"path/filepath"
 
 	"github.com/jinzhu/gorm"
 	"github.com/revel/revel"
@@ -20,8 +23,33 @@ var (
 	BuildTime string
 )
 
+func ensurePaths() {
+	revel.AppLog.Info("ensure paths exist")
+	// Validate path for photo storage.
+	photoPath, found := revel.Config.String("storage.path")
+	if !found {
+		revel.AppLog.Fatalf("no photo storage path set")
+	}
+
+	_, err := os.Stat(photoPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			revel.AppLog.Fatalf("photo storage path %q does not exist", photoPath)
+		} else {
+			revel.AppLog.Fatalf("unexpected error: %q", err.Error())
+		}
+	}
+
+	temp := []byte("temp")
+	fname := filepath.Join(photoPath, "__access_test.___")
+	if err := ioutil.WriteFile(fname, temp, 0600); err != nil {
+		revel.AppLog.Fatalf("no write access in photo storage path %q", photoPath)
+	}
+	os.Remove(fname)
+}
+
 func ensureAdminAccess() {
-	revel.AppLog.Warn("ensureAdminAccess()")
+	revel.AppLog.Info("ensure admin access")
 	adminEmail, found := revel.Config.String("admin.email")
 	if !found {
 		revel.AppLog.Fatalf("no admin email set in ENV var %q", "LUIS_ADMIN_EMAIL")
@@ -96,7 +124,8 @@ func init() {
 	// revel.DevMode and revel.RunMode only work inside of OnAppStart. See Example Startup Script
 	// ( order dependent )
 	revel.OnAppStart(gormdb.InitDB, 0)
-	revel.OnAppStart(ensureAdminAccess, 1)
+	revel.OnAppStart(ensurePaths, 1)
+	revel.OnAppStart(ensureAdminAccess, 2)
 	// revel.OnAppStart(ExampleStartupScript)
 	// revel.OnAppStart(InitDB)
 	// revel.OnAppStart(FillCache)
