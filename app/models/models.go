@@ -61,9 +61,8 @@ type Collection struct {
 type File struct {
 	gorm.Model
 
-	Path         string
 	Name         string
-	Ext          string
+	Thumb        string
 	Type         FileType
 	Title        string
 	Description  string
@@ -75,6 +74,7 @@ type File struct {
 
 	// TODO acess/rights/special tags
 }
+
 type User struct {
 	gorm.Model
 

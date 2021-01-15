@@ -2,50 +2,54 @@
 
 <!DOCTYPE html>
 <html lang="en" class="has-navbar-fixed-top">
+  <head>
+    {{template "header.html" .}}
+    <!-- <link rel="stylesheet" type="text/css" href="/public/css/basic.css" /> -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/public/css/dropzone.min.css"
+    />
+    <script src="/public/js/dropzone.min.js"></script>
+    <script src="/public/js/photo-dropzone.js"></script>
+  </head>
 
-<head>
-  {{template "header.html" .}}
-  <link rel="stylesheet" type="text/css" href="/public/css/basic.css" />
-  <link rel="stylesheet" type="text/css" href="/public/css/dropzone.min.css" />
-  <script src="/public/js/dropzone.min.js"></script>
-  <script src="/public/js/photo-dropzone.js"></script>
-</head>
+  <body>
+    {{template "navbar.html" .}}
 
-<body>
-  {{template "navbar.html" .}}
-
-  <section class="section">
-    <div class="container is-max-desktop">
-      {{if .flash.success}}
-      <div class="notification is-primary is-light">
-        <button class="delete"></button>
-        {{.flash.success}}
-      </div>
-      <script src="/public/js/notification-close.js"></script>
-      {{end}}
-      {{if .flash.error}}
-      <div class="notification is-danger is-light">
-        <button class="delete"></button>
-        {{.flash.error}}
-      </div>
-      <script src="/public/js/notification-close.js"></script>
-      {{end}}
-
-      <div>
-        <h1 class="title">Upload Photos</h1>
-        <div id="dropzone">
-          <form action="/upload" method="POST" class="dropzone dz-clickable" id="photoDropzone">
-            <div class="dz-message">Drop files here or click to upload.
-              <br> <span class="note"></span>
-            </div>
-          </form>
+    <section class="section">
+      <div class="container is-max-desktop">
+        {{if .flash.success}}
+        <div class="notification is-primary is-light">
+          <button class="delete"></button>
+          {{.flash.success}}
         </div>
-        <!-- <form action="/upload" method="POST" class="dropzone" id="photoDropzone"></form> -->
+        <script src="/public/js/notification-close.js"></script>
+        {{ end }}
+        {{if .flash.error}}
+        <div class="notification is-danger is-light">
+          <button class="delete"></button>
+          {{.flash.error}}
+        </div>
+        <script src="/public/js/notification-close.js"></script>
+        {{ end }}
+
+        <div>
+          <h1 class="title">Upload Photos</h1>
+          <div id="dropzone">
+            <form
+              action="/upload"
+              method="POST"
+              class="dropzone dz-clickable"
+              id="photoDropzone"
+            >
+              <div class="dz-message">Drop files here or click to upload.</div>
+            </form>
+          </div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  {{template "footer.html" .}}
-</body>
-
+    {{template "footer.html" .}}
+  </body>
 </html>

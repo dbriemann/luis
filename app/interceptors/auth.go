@@ -3,6 +3,8 @@ package interceptors
 import (
 	"luis/app/controllers"
 	"luis/app/globals"
+	"luis/app/gormdb"
+	"luis/app/models"
 
 	"github.com/revel/revel"
 	"github.com/revel/revel/cache"
@@ -36,8 +38,19 @@ func CheckAccess(c *revel.Controller) revel.Result {
 		return c.Redirect(controllers.Access.Login)
 	}
 
-	// Token is valid. Save email in controller.
-	c.Args["email"] = email
+	// Token is valid. Fetch user from DB and save in controller Args.
+	user := models.User{
+		Email: email,
+	}
+
+	result := gormdb.DB.Take(&user)
+	if result.Error != nil {
+		c.Flash.Error(globals.ErrInternalServerError.Error())
+		c.Log.Errorf("unexpected error: %q", result.Error.Error())
+
+		return c.RenderError(globals.ErrInternalServerError)
+	}
+	c.Args["user"] = user
 
 	adminEmail, _ := revel.Config.String("admin.email")
 	if email == adminEmail {
