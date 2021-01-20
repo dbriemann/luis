@@ -1,17 +1,18 @@
 package app
 
 import (
+	"database/sql"
 	"errors"
 	"io/ioutil"
 	"luis/app/controllers"
-	"luis/app/gormdb"
 	"luis/app/interceptors"
 	"luis/app/models"
+	"luis/app/store"
 	"luis/app/util"
 	"os"
 	"path/filepath"
+	"time"
 
-	"github.com/jinzhu/gorm"
 	"github.com/revel/revel"
 )
 
@@ -58,16 +59,33 @@ func ensureAdminAccess() {
 	revel.AppLog.Infof("LUIS_ADMIN_EMAIL set to %q", adminEmail)
 
 	// Check if admin account already exists in DB. If not create it with random PW.
-	admin := models.User{
-		Email: adminEmail,
+	admin, err := models.UserByEmail(store.DB, adminEmail)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			secret, err := util.GenerateSecret(64)
+			if err != nil {
+				revel.AppLog.Fatalf("cannot generate high quality secret - No PRNG available")
+			}
+
+			admin.Email = adminEmail
+			admin.Secret = secret
+			admin.IsAdmin = true
+			admin.CreatedAt = time.Now().Unix()
+			admin.UpdatedAt = admin.CreatedAt
+
+			// Create admin user (first start).
+			if err := admin.Insert(store.DB); err != nil {
+				revel.AppLog.Fatalf("cannot store admin user in DB: %q", err.Error())
+			}
+		} else {
+			revel.AppLog.Fatalf("unexpected error: %q", err.Error())
+		}
 	}
-	result := gormdb.DB.Take(&admin)
 
-	needsUpdate := false
-
+	// needsUpdate := false
+	//
 	// If admin has no secret, generate one.
 	if admin.Secret == "" {
-		// Create initial admin user secret.
 		secret, err := util.GenerateSecret(64)
 		if err != nil {
 			revel.AppLog.Fatalf("cannot generate high quality secret - No PRNG available")
@@ -75,24 +93,13 @@ func ensureAdminAccess() {
 
 		admin.Secret = secret
 		admin.IsAdmin = true
-		needsUpdate = true
+
+		if err := admin.Update(store.DB); err != nil {
+			revel.AppLog.Fatalf("cannot update user: %q with error: %q", admin.Email, err.Error())
+		}
 	}
 
 	// TODO: if admin data is not complete show user view and force admin to enter name etc.
-
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		// Admin user didn't exist in DB. Create.
-		result := gormdb.DB.Create(&admin)
-		if result.Error != nil {
-			revel.AppLog.Fatalf("could not create admin user: %q", result.Error.Error())
-		}
-	} else if needsUpdate {
-		// Update admin with new password.
-		result := gormdb.DB.Save(&admin)
-		if result.Error != nil {
-			revel.AppLog.Fatalf("could not update admin user: %q", result.Error.Error())
-		}
-	}
 
 	// At this point we have a valid admin user stored in the database.
 	revel.AppLog.Infof("admin secret is: %s", admin.Secret)
@@ -123,12 +130,9 @@ func init() {
 	// Register startup functions with OnAppStart
 	// revel.DevMode and revel.RunMode only work inside of OnAppStart. See Example Startup Script
 	// ( order dependent )
-	revel.OnAppStart(gormdb.InitDB, 0)
+	revel.OnAppStart(store.InitDB, 0)
 	revel.OnAppStart(ensurePaths, 1)
 	revel.OnAppStart(ensureAdminAccess, 2)
-	// revel.OnAppStart(ExampleStartupScript)
-	// revel.OnAppStart(InitDB)
-	// revel.OnAppStart(FillCache)
 }
 
 var RememberRouteFilter = func(c *revel.Controller, fc []revel.Filter) {

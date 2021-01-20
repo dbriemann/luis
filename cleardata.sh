@@ -1,3 +1,3 @@
 #!/bin/bash 
 rm photos/*.*
-rm luis.sqlite
+rm db.sqlite

@@ -1,6 +1,10 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"github.com/jmoiron/sqlx"
+)
 
 type FileType int
 type PermissionType int
@@ -20,70 +24,146 @@ const (
 // TODO: think about a simple tag solution that works together
 // with the permission management of collections.
 
-// gorm.Model
-
 // Key   string
 // Value string
 // }
 
-type Comment struct {
-	gorm.Model
+type User struct {
+	ID        int64 `db:"id"`
+	CreatedAt int64 `db:"created_at"`
+	UpdatedAt int64 `db:"updated_at"`
 
-	Text   string
-	FileID uint // Belongs to 1 File.
+	Email       string       `db:"email"`
+	Secret      string       `db:"secret"`
+	Name        string       `db:"name"`
+	IsAdmin     bool         `db:"is_admin"`
+	Permissions []Permission `db:"-"`
+	Files       []File       `db:"-"`
+	Collections []Collection `db:"-"`
+	// TODO: Avatar?
 }
 
-type Star struct {
-	gorm.Model
-
-	FileID uint // Belongs to 1 File.
+func UserByEmail(db *sqlx.DB, email string) (*User, error) {
+	u := &User{}
+	err := db.Get(u, "SELECT * FROM users WHERE email = LOWER( ? )", email)
+	return u, err
 }
 
-type Permission struct {
-	gorm.Model
-
-	Type         PermissionType
-	CollectionID uint // Belongs to 1 Collection.
-	UserID       uint // Belongs to 1 User.
+func (u *User) Update(db *sqlx.DB) error {
+	_, err := db.Exec(`
+		UPDATE users 
+		SET updated_at = ?, email = LOWER( ? ), secret = ?, name = ?, is_admin = ?
+		WHERE id = ?`,
+		time.Now().Unix(), u.Email, u.Secret, u.Name, u.IsAdmin, u.ID)
+	return err
 }
 
-type Collection struct {
-	gorm.Model
+func (u *User) FetchFiles(db *sqlx.DB) error {
+	err := db.Select(&u.Files, "SELECT * FROM files WHERE owner_id = ?", u.ID)
+	return err
+}
 
-	Name        string
-	Description string
-	Cover       File
-	Files       []File       `gorm:"many2many:collection_files;"` // Has 0..n Files.
-	Permissions []Permission // Has 0..n Permissions.
-	OwnerID     uint         // Belongs to 1 User.
+func (u *User) Insert(db *sqlx.DB) error {
+	res, err := db.Exec(`
+		INSERT INTO users (
+			created_at, updated_at, email, secret, name, is_admin
+		)
+		VALUES (?, ?, LOWER( ? ), ?, ?, ?)`,
+		u.CreatedAt,
+		u.UpdatedAt,
+		u.Email,
+		u.Secret,
+		u.Name,
+		u.IsAdmin,
+	)
+	if err == nil {
+		u.ID, err = res.LastInsertId()
+	}
+
+	return err
+}
+
+func FileByID(db *sqlx.DB, id int64) (*File, error) {
+	f := &File{}
+	err := db.Get(f, "SELECT * FROM files WHERE id = ?", id)
+	return f, err
 }
 
 type File struct {
-	gorm.Model
+	ID        int64 `db:"id"`
+	CreatedAt int64 `db:"created_at"`
+	UpdatedAt int64 `db:"updated_at"`
 
-	Name         string
-	Thumb        string
-	Type         FileType
-	Title        string
-	Description  string
-	Comments     []Comment    // Has 0..n Comments.
-	Stars        []Star       // Has 0..n Stars.
-	Collections  []Collection `gorm:"many2many:collection_files;"` // Is in to 0..n Collections.
-	OwnerID      uint         // Belongs to 1 User as owner.
-	CollectionID uint         // Belongs to 1 Collection as cover.
+	Name         string       `db:"name"`
+	Thumb        string       `db:"thumb"`
+	Type         FileType     `db:"type"`
+	Title        string       `db:"title"`
+	Description  string       `db:"description"`
+	Comments     []Comment    `db:"-"`
+	Stars        []Star       `db:"-"`
+	Collections  []Collection `db:"-"`
+	OwnerID      int64        `db:"owner_id"`
+	CollectionID int64        `db:"collection_id"`
 
 	// TODO acess/rights/special tags
 }
 
-type User struct {
-	gorm.Model
+func (f *File) Insert(db *sqlx.DB) error {
+	res, err := db.Exec(`
+		INSERT INTO files (
+			created_at, updated_at, name, thumb, type, title, description, owner_id
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		f.CreatedAt,
+		f.UpdatedAt,
+		f.Name,
+		f.Thumb,
+		f.Type,
+		f.Title,
+		f.Description,
+		f.OwnerID,
+	)
+	if err == nil {
+		f.ID, err = res.LastInsertId()
+	}
 
-	Email       string `gorm:"uniqueIndex"`
-	Secret      string
+	return err
+}
+
+type Comment struct {
+	ID        int64 `db:"id"`
+	CreatedAt int64 `db:"created_at"`
+	UpdatedAt int64 `db:"updated_at"`
+
+	Text   string `db:"text"`
+	FileID int64  `db:"file_id"`
+}
+
+type Star struct {
+	ID int64 `db:"id"`
+
+	FileID int64
+}
+
+type Permission struct {
+	ID        int64 `db:"id"`
+	CreatedAt int64 `db:"created_at"`
+	UpdatedAt int64 `db:"updated_at"`
+
+	Type         PermissionType
+	CollectionID int64
+	UserID       int64
+}
+
+type Collection struct {
+	ID        int64 `db:"id"`
+	CreatedAt int64 `db:"created_at"`
+	UpdatedAt int64 `db:"updated_at"`
+
 	Name        string
-	IsAdmin     bool
-	Permissions []Permission // Has 0..n Permissions.
-	Files       []File       `gorm:"foreignKey:OwnerID"` // Has 0..n Files.
-	Collections []Collection `gorm:"foreignKey:OwnerID"` // Has 0..n Collections.
-	// TODO: Avatar?
+	Description string
+	Cover       File
+	Files       []File
+	Permissions []Permission
+	OwnerID     int64
 }

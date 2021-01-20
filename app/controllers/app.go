@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"image"
 	"luis/app/globals"
-	"luis/app/gormdb"
 	"luis/app/models"
+	"luis/app/store"
 	"luis/app/util"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/disintegration/imaging"
 	"github.com/revel/revel"
@@ -35,20 +36,19 @@ func (c App) Index() revel.Result {
 		return c.RenderError(globals.ErrInternalServerError)
 	}
 
-	var files []models.File
-	if err := gormdb.DB.Model(&user).Association("Files").Find(&files); err != nil {
+	if err := user.FetchFiles(store.DB); err != nil {
 		c.Log.Errorf("could not query files for user %q with error: %q", user.Email, err.Error())
 
 		return c.RenderError(globals.ErrInternalServerError)
 	}
 
 	//put all files in viewargs
-	c.ViewArgs["files"] = files
+	c.ViewArgs["Files"] = user.Files
 
 	return c.Render()
 }
 
-func (c App) File(id uint) revel.Result {
+func (c App) File(id int64) revel.Result {
 	user, ok := c.Args["user"].(models.User)
 	if !ok {
 		c.Log.Errorf("no user found in 'Args' for logged-in user")
@@ -57,27 +57,20 @@ func (c App) File(id uint) revel.Result {
 	}
 
 	// Fetch file from DB.
-	f := models.File{}
+	f, err := models.FileByID(store.DB, id)
+	if err != nil {
+		c.Log.Infof("could not retrieve File %d from db: %q", id, err.Error())
 
-	result := gormdb.DB.Preload("Collections").Take(&f, id)
-	if result.Error != nil {
-		c.Log.Errorf("could not retrieve File %d from db: %q", id, result.Error.Error())
-
-		return c.RenderError(globals.ErrInternalServerError)
+		return c.NotFound("file not found")
 	}
 
-	c.Log.Debugf("%+v", f)
-
-	// Check if user is owner or file is in a collection of owner.
+	// If the files is not owned by the current user...
 	if f.OwnerID != user.ID {
-		// Collections that contain file.
+		// ... we check whether it's in one of the user's collections.
+		// TODO
 
-		// Collections of user
-		gormdb.DB.Preload("Collections").Take(&user)
-		// overlap?
-		// Check if requesting user has a collection that contains the file.
-		// gormdb.DB.Model(&user).Preload("Collections").Association("Collections")
-	} // Else file is owned by requesting user -> access allowed.
+		return c.Forbidden("you have no access")
+	}
 
 	storagePath, found := revel.Config.String("storage.path")
 	if !found {
@@ -137,8 +130,11 @@ func (c App) UploadPost(file []byte) revel.Result {
 		}
 
 		// Persist saved image in DB.
-		// result := gormdb.DB.Save(&f)
-		if err := gormdb.DB.Model(&user).Association("Files").Append(&f); err != nil {
+		// if err := gormdb.DB.Model(&user).Association("Files").Append(&f); err != nil {
+		f.CreatedAt = time.Now().Unix()
+		f.UpdatedAt = f.CreatedAt
+		f.OwnerID = user.ID
+		if err := f.Insert(store.DB); err != nil {
 			c.Log.Errorf("could not persist file %q in DB with error %q", f.Name, err.Error())
 
 			// In case of failure we have to clean up the orphaned image and thumb files.
@@ -191,7 +187,7 @@ func (c App) saveImage(spath string, fname string, img image.Image) (models.File
 	count := 1
 	var dstPathImage string
 	var dstPathThumb string
-	for {
+	for { // TODO: max iterations
 		// Iterate until a free filename is found.
 		dstPathImage = filepath.Join(spath, finalName)
 		dstPathThumb = filepath.Join(spath, finalThumbName)
@@ -204,14 +200,16 @@ func (c App) saveImage(spath string, fname string, img image.Image) (models.File
 		}
 
 		// If another error occurred we return it and fail.
-		if ferr != nil {
+		if ferr != nil && !os.IsNotExist(ferr) {
+			c.Log.Debugf("image file stat error: %q", ferr.Error())
 			return f, ferr
 		}
-		if terr != nil {
+		if terr != nil && !os.IsNotExist(terr) {
+			c.Log.Debugf("thumb file stat error: %q", terr.Error())
 			return f, terr
 		}
 
-		c.Log.Infof("filename %q already exists")
+		c.Log.Infof("filename %q or %q already exists", finalName, finalThumbName)
 
 		// Find a new filename.
 		count++
@@ -274,8 +272,9 @@ func (c App) ProfilePost() revel.Result {
 		user.Email = newemail
 		user.Name = newname
 
-		if result := gormdb.DB.Save(&user); result.Error != nil {
-			c.Log.Errorf("updating user (mail: %q, new mail: %q, name: %q, new name: %q) failed: %q", user.Email, newemail, oldname, newname)
+		// if result := gormdb.DB.Save(&user); result.Error != nil {
+		if err := user.Update(store.DB); err != nil {
+			c.Log.Errorf("updating user (mail: %q, new mail: %q, name: %q, new name: %q) failed with error: %q", user.Email, newemail, oldname, newname, err.Error())
 
 			return c.RenderError(globals.ErrInternalServerError)
 		}

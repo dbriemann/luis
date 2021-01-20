@@ -7,8 +7,9 @@ update_deps:
 	cp node_modules/dropzone/dist/min/dropzone.min.js public/js/
 	cp node_modules/dropzone/dist/min/dropzone.min.css public/css/
 	cp node_modules/photoswipe/dist/photoswipe.min.js public/js/
+	cp node_modules/photoswipe/dist/photoswipe.js public/js/
 	cp node_modules/photoswipe/dist/photoswipe-ui-default.min.js public/js/
 	cp node_modules/photoswipe/dist/photoswipe.css public/css/
-	cp -r node_modules/photoswipe/dist/default-skin public/css/default-skin
+	cp -r node_modules/photoswipe/dist/default-skin public/css/
 
 prebuild: sass update_deps

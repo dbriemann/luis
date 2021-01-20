@@ -2,16 +2,16 @@ package controllers
 
 import (
 	"crypto/subtle"
+	"database/sql"
 	"errors"
 
 	"luis/app/globals"
-	"luis/app/gormdb"
 	"luis/app/models"
+	"luis/app/store"
 	"luis/app/util"
 
 	"github.com/revel/revel"
 	"github.com/revel/revel/cache"
-	"gorm.io/gorm"
 )
 
 type Access struct {
@@ -47,17 +47,15 @@ func (c Access) LoginPost(remember bool) revel.Result {
 
 	c.Log.Infof("login attempt for email %q", email)
 
-	var user models.User
+	user, err := models.UserByEmail(store.DB, email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			c.Log.Infof("login - unknown email: %q", email)
+			c.Flash.Error("Invalid user credentials!")
 
-	result := gormdb.DB.Take(&user, "email = ?", email)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		c.Log.Infof("login - unknown email: %q", email)
-		// TODO: should we redirect to "request access" page here?
-		// This would be less secure because it releases information about the email.
-		// However with the generated passwords this should not be a real issue?!
-		c.Flash.Error("Invalid user credentials!")
-
-		return c.Redirect(Access.Login)
+			return c.Redirect(Access.Login)
+		}
+		// TODO - internal server error?
 	}
 
 	if subtle.ConstantTimeCompare([]byte(user.Secret), []byte(pass)) == 0 {
