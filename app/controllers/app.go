@@ -49,6 +49,14 @@ func (c App) Index() revel.Result {
 }
 
 func (c App) File(id int64) revel.Result {
+	return c.serveFile(id, false)
+}
+
+func (c App) Thumb(id int64) revel.Result {
+	return c.serveFile(id, true)
+}
+
+func (c App) serveFile(id int64, thumb bool) revel.Result {
 	user, ok := c.Args["user"].(models.User)
 	if !ok {
 		c.Log.Errorf("no user found in 'Args' for logged-in user")
@@ -79,7 +87,12 @@ func (c App) File(id int64) revel.Result {
 		return c.RenderError(globals.ErrInternalServerError)
 	}
 
-	path := filepath.Join(storagePath, f.Name)
+	var path string
+	if thumb {
+		path = filepath.Join(storagePath, f.Thumb)
+	} else {
+		path = filepath.Join(storagePath, f.Name)
+	}
 
 	// Serve the static file.
 	return c.RenderFileName(path, revel.Inline)

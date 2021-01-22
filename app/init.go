@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"luis/app/controllers"
+	"luis/app/globals"
 	"luis/app/interceptors"
 	"luis/app/models"
 	"luis/app/store"
@@ -106,6 +107,10 @@ func ensureAdminAccess() {
 }
 
 func init() {
+	// Custom template helper functions.
+	revel.TemplateFuncs["isColumn"] = func(val, col int) bool {
+		return val%globals.GalleryColumns == col
+	}
 	// Filters is the default set of global filters.
 	revel.Filters = []revel.Filter{
 		revel.PanicFilter,             // Recover from panics and display an error page instead.

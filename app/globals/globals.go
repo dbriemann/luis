@@ -10,6 +10,7 @@ const (
 	OneWeek             = 168 * time.Hour
 	MaxSecretCollisions = 10
 	ThumbnailSizePixels = 400
+	GalleryColumns      = 4
 )
 
 var (
