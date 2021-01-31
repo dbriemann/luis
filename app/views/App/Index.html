@@ -4,8 +4,9 @@
 <html lang="en" class="has-navbar-fixed-top">
   <head>
     {{ template "header.html" . }}
-    <link rel="stylesheet" href="/public/css/lightgallery.css" />
+    <link rel="stylesheet" href="/public/css/nanogallery2.min.css" />
     <link rel="stylesheet" href="/public/css/gallery.css" />
+    <script src="/public/js/jquery.nanogallery2.min.js"></script>
   </head>
 
   <body>
@@ -15,33 +16,28 @@
 
     <section class="section">
       <div class="container">
-        <div class="columns is-multiline" id="gallery">
-          {{ range .Files }}
-            <div class="column is-one-quarter-desktop is-half-tablet">
-              <div class="box">
-                <a href="/file/{{ .ID }}">
-                  <figure class="image is-3by2">
-                    <img
-                      src="/thumb/{{ .ID }}"
-                      alt="{{ .Name }}"
-                      class="grow"
-                    />
-                  </figure>
-                </a>
-              </div>
-            </div>
-          {{ end }}
-        </div>
+        <div id="nanogallery2">test</div>
       </div>
     </section>
 
     {{ template "footer.html" . }}
-    <script src="/public/js/lightgallery.js"></script>
+
     <script>
-      lightGallery($("#gallery"), {
-        thumbnail: false,
+    jQuery(document).ready(function () {
+      jQuery("#nanogallery2").nanogallery2({
+        thumbnailHeight: 300,
+        thumbnailWidth: "auto",
+        itemsBaseURL: "/",
+
+        items: [
+          // {{range .Files}}
+          { src: "file/{{.ID}}", srct: "thumb/{{.ID}}", title: "" },
+          // {{end}}
+        ],
+
+        thumbnailHoverEffect2: "image_scale_1.20_1.00",
       });
+    });
     </script>
-    <!-- <script src="/public/js/lg-thumbnail.min.js"></script> -->
   </body>
 </html>
