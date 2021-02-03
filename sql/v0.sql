@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS files (
 	created_at 		INTEGER,
 	updated_at 		INTEGER,
 	name 				TEXT,
+	date 				INTEGER,
 	thumb 			TEXT,
 	type 				INTEGER,
 	title 			TEXT,

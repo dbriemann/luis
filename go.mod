@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b // indirect
-	github.com/disintegration/imaging v1.6.2
 	github.com/garyburd/redigo v1.6.2 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/inconshreveable/log15 v0.0.0-20201112154412-8562bdadbbac // indirect
@@ -15,6 +14,6 @@ require (
 	github.com/revel/config v1.0.0 // indirect
 	github.com/revel/modules v1.0.0
 	github.com/revel/revel v1.0.0
-	golang.org/x/image v0.0.0-20201208152932-35266b937fa6 // indirect
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 )

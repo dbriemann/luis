@@ -10,6 +10,12 @@ The following environment variables need to be set for luis:
 
 - `LUIS_ADMIN_EMAIL`: the email(login) of the admin account.
 
+# Dependencies
+
+The following dependencies need to be installed on the server running Luis:
+
+- imagemagick (for exif extraction and image manipulation)
+
 # TODO Features
 
 - Users with different rights
@@ -20,4 +26,3 @@ The following environment variables need to be set for luis:
 - Allow download of single pictures and ZIPs of whole albums
 - Create meta data for every picture (read exif)
 - Sort by meta data e.g. date taken
-

@@ -1,19 +1,21 @@
 package controllers
 
 import (
-	"bytes"
-	"image"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"luis/app/globals"
 	"luis/app/models"
 	"luis/app/store"
 	"luis/app/util"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/disintegration/imaging"
 	"github.com/revel/revel"
 )
 
@@ -131,19 +133,35 @@ func (c App) UploadPost(file []byte) revel.Result {
 		return c.RenderError(globals.ErrInternalServerError)
 	}
 
+	// TODO: handle specific image types ?!
+	// switch filetype {
+	// case "image/jpg", "image/jpeg", "image/":
+	//    // ...
+	// }
+
 	// Determine filetype and start according processing.
-	// 1. Try to load as image.
-	if img, err := imaging.Decode(bytes.NewReader(file)); err == nil {
+	filetype := http.DetectContentType(file)
+	if strings.HasPrefix(filetype, "image/") {
 		// It is an image -> make thumbnail and save image data.
-		f, err := c.saveImage(storagePath, fname, img)
+		f, err := c.saveImage(storagePath, fname, file)
 		if err != nil {
 			c.Log.Errorf("error saving image data for file %q: %q", fname, err.Error())
 
 			return c.RenderError(globals.ErrInternalServerError)
 		}
 
+		// Read exif data from image.
+		fpath := filepath.Join(storagePath, f.Name)
+		if ex, err := c.extractExif(fpath); err != nil {
+			c.Log.Errorf("error extracting exif: %q", err)
+			// TODO set date?
+		} else {
+			// TODO simplify exif structure and date etc
+			// can we use string here instead of timestamp?
+			f.Date = ex.Date
+		}
+
 		// Persist saved image in DB.
-		// if err := gormdb.DB.Model(&user).Association("Files").Append(&f); err != nil {
 		f.CreatedAt = time.Now().Unix()
 		f.UpdatedAt = f.CreatedAt
 		f.OwnerID = user.ID
@@ -180,20 +198,39 @@ func (c App) UploadPost(file []byte) revel.Result {
 	return c.RenderText("OK")
 }
 
-func (c App) saveImage(spath string, fname string, img image.Image) (models.File, error) {
-	f := models.File{}
+func (c App) extractExif(fpath string) (models.EXIF, error) {
+	e := models.EXIF{}
+	meta := make([]models.MetaData, 1)
 
-	// Make thumbnail.
-	w, h := img.Bounds().Max.X, img.Bounds().Max.Y
-	if w > h {
-		w = globals.ThumbnailSizePixels
-		h = 0
-	} else {
-		w = 0
-		h = globals.ThumbnailSizePixels
+	// Read exif data from image.
+	metaDataCmd := exec.Command(
+		"convert",
+		fpath,
+		"json:",
+	)
+
+	out, err := metaDataCmd.CombinedOutput()
+	if err != nil {
+		return e, err
 	}
 
-	thumb := imaging.Resize(img, w, h, imaging.Lanczos)
+	if err := json.Unmarshal(out, &meta); err != nil {
+		return e, err
+	}
+
+	layout := "2006:01:02 15:04:05"
+	dateStr := meta[0].Image.Properties.DateTimeOriginal
+	t, err := time.Parse(layout, dateStr)
+	if err != nil {
+		return e, fmt.Errorf("could not parse datetime %q with error: %w", dateStr, err)
+	}
+
+	e.Date = t.Unix()
+	return e, nil
+}
+
+func (c App) saveImage(storagePath string, fname string, raw []byte) (models.File, error) {
+	f := models.File{}
 
 	finalName := fname
 	finalThumbName := "thumb_" + finalName
@@ -202,8 +239,8 @@ func (c App) saveImage(spath string, fname string, img image.Image) (models.File
 	var dstPathThumb string
 	for { // TODO: max iterations
 		// Iterate until a free filename is found.
-		dstPathImage = filepath.Join(spath, finalName)
-		dstPathThumb = filepath.Join(spath, finalThumbName)
+		dstPathImage = filepath.Join(storagePath, finalName)
+		dstPathThumb = filepath.Join(storagePath, finalThumbName)
 		_, ferr := os.Stat(dstPathImage)
 		_, terr := os.Stat(dstPathThumb)
 
@@ -231,27 +268,27 @@ func (c App) saveImage(spath string, fname string, img image.Image) (models.File
 		finalThumbName = "thumb_" + finalName
 	}
 
-	// Save image.
-	err := imaging.Save(img, dstPathImage)
-	if err != nil {
-		return f, err
-	}
-	// Save thumb.
-	err = imaging.Save(thumb, dstPathThumb)
-	if err != nil {
-		// If thumb cannot be saved we have to clean up the image.
-		if err := os.Remove(dstPathImage); err != nil {
-			c.Log.Errorf("could not clean up orphaned image at %q", dstPathImage)
-			c.Log.Errorf("delete this image manually to avoid garbage")
-		}
-
+	// Save image. (copy file to not lose metadata)
+	if err := ioutil.WriteFile(dstPathImage, raw, 0664); err != nil {
 		return f, err
 	}
 
-	// CONTINUE
+	// Resize image to thumb and save with imagemagick.
+	resizeCmd := exec.Command(
+		"convert",
+		dstPathImage,
+		"-geometry",
+		fmt.Sprintf("x%d", globals.ThumbnailSizePixels),
+		dstPathThumb,
+	)
+	if err := resizeCmd.Run(); err != nil {
+		return f, err
+	}
+
 	f.Name = finalName
 	f.Thumb = finalThumbName
 	f.Type = models.FileTypeImage
+
 	// TODO: where to handle collection?
 
 	return f, nil
